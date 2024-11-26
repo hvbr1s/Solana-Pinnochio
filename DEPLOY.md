@@ -15,3 +15,8 @@ solana program deploy ./target/deploy/challengo.so
 ```
 solana program show CgHdZ6PbvWftcxrPSn1dU25Ux82JtqHUhtLnGc9tmuHX
 ```
+
+#### To set the repository remote
+```
+git remote set-url origin https://github.com/danjaheny/challengo.git
+```
