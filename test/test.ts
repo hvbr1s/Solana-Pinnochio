@@ -1,4 +1,5 @@
 import fs from 'fs';
+import os from 'os';
 import * as web3 from '@solana/web3.js';
   import { Buffer } from 'buffer';
   
@@ -57,9 +58,9 @@ import * as web3 from '@solana/web3.js';
   // Example usage:
   async function main() {
     const connection = new web3.Connection('https://api.devnet.solana.com', 'confirmed');
-    const programId = new web3.PublicKey('CgHdZ6PbvWftcxrPSn1dU25Ux82JtqHUhtLnGc9tmuHX');
+    const programId = new web3.PublicKey('GbJ8tYwgUpUemTLBnN2XnQ8dU1waS3U7DmpVSBuJ1CU1');
     const payer = web3.Keypair.fromSecretKey(
-        Uint8Array.from(JSON.parse(fs.readFileSync('/Users/danjaheny/.config/solana/id.json', 'utf-8')))
+      Uint8Array.from(JSON.parse(fs.readFileSync(`${os.homedir()}/.config/solana/id.json`, 'utf-8')))
       );
   
     await testRatingProgram(connection, programId, payer);
