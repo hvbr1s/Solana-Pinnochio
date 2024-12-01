@@ -12,8 +12,9 @@ async function main() {
   console.log(`Payer is ${payer.publicKey}`)
 
   const andy = new web3.PublicKey('Andy1111111111111111111111111111111111111111')
+  const receiver = payer.publicKey
   
-  await testRatingProgram(connection, programId, payer, andy);
+  await testRatingProgram(connection, programId, payer, andy, receiver);
   }
   
   main().catch(console.error);
@@ -22,7 +23,8 @@ async function testRatingProgram(
   connection: web3.Connection,
   programId: web3.PublicKey,
   payer: web3.Keypair,
-  andy: web3.PublicKey
+  andy: web3.PublicKey,
+  receiver: web3.PublicKey
 ) {
 
   // Create the attack account owned by payer
@@ -82,6 +84,16 @@ async function testRatingProgram(
         pubkey: web3.SystemProgram.programId,
         isSigner: false,
         isWritable: false,
+      },
+      {
+        pubkey: andy,
+        isSigner: false,
+        isWritable: false
+      },
+      {
+        pubkey: payer.publicKey,
+        isSigner: true,
+        isWritable: true,
       },
     ],
     programId: programId,
