@@ -86,14 +86,14 @@ async function testRatingProgram(
         isWritable: false,
       },
       {
+        pubkey: receiver,
+        isSigner: true,
+        isWritable: true,
+      },
+      {
         pubkey: andy,
         isSigner: false,
         isWritable: false
-      },
-      {
-        pubkey: payer.publicKey,
-        isSigner: true,
-        isWritable: true,
       },
     ],
     programId: programId,
