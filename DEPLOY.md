@@ -8,7 +8,7 @@ solana config set --url https://api.devnet.solana.com
 ```
 #### To deploy the program
 ```
-solana program deploy ./target/deploy/challengo.so
+solana program deploy ./target/deploy/challenge.so
 ```
 
 #### To check the deployed program on devnet:
