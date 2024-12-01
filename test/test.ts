@@ -112,4 +112,3 @@ async function testRatingProgram(
     console.error('Error:', error);
   }
 }
-
