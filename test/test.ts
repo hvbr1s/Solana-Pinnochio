@@ -51,7 +51,7 @@ async function testRatingProgram(
     const signature = await web3.sendAndConfirmTransaction(
       connection,
       tx,
-      [payer, attackAccount] // Need to sign with both payer and new account
+      [payer, attackAccount]
     );
     console.log('Account created successfully:', signature);
     console.log('Attack account address:', attackAccount.publicKey.toString());
@@ -61,10 +61,9 @@ async function testRatingProgram(
     return;
   }
 
-  // Now let's ping the contract
-  // Create the instruction data (rating from 0-10)
-  const rating = 8; 
-  const data = Buffer.alloc(8);
+  // Now let's ping the contract with the rating
+  const rating = 256; 
+  const data = Buffer.alloc(256);
   data.writeBigUInt64LE(BigInt(rating));
 
   // Create the transaction
